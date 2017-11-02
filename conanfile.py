@@ -103,4 +103,4 @@ class GraphvizConan(ConanFile):
             self.copy('lib%s.dylib' % f, src='%s/lib' % self.build_dir, dst='lib')
 
     def package_info(self):
-        self.cpp_info.libs = self.libs
+        self.cpp_info.libs = self.libs + self.libs_plugins
