@@ -67,6 +67,7 @@ class GraphvizConan(ConanFile):
                 autotools.cxx_flags.append('-mno-sse4')
                 autotools.cxx_flags.append('-mno-sse4.1')
                 autotools.cxx_flags.append('-mno-sse4.2')
+                env_vars = {}
             elif platform.system() == 'Linux':
                 env_vars = {
                     'CC' : '/opt/llvm-3.8.0/bin/clang',
@@ -131,13 +132,13 @@ class GraphvizConan(ConanFile):
                 with tools.chdir('plugin'):
                     autotools.make(args=['--quiet', 'install'])
 
-                with tools.chdir('lib/graphviz'):
+                with tools.chdir('lib'):
                     if platform.system() == 'Darwin':
-                        shutil.move('libgvplugin_dot_layout.6.dylib', 'libgvplugin_dot_layout.dylib')
-                        shutil.move('libgvplugin_core.6.dylib', 'libgvplugin_core.dylib')
+                        shutil.move('graphviz/libgvplugin_dot_layout.6.dylib', 'libgvplugin_dot_layout.dylib')
+                        shutil.move('graphviz/libgvplugin_core.6.dylib', 'libgvplugin_core.dylib')
                     elif platform.system() == 'Linux':
-                        shutil.move('libgvplugin_dot_layout.so.6.0.0', 'libgvplugin_dot_layout.so')
-                        shutil.move('libgvplugin_core.so.6.0.0', 'libgvplugin_core.so')
+                        shutil.move('graphviz/libgvplugin_dot_layout.so.6.0.0', 'libgvplugin_dot_layout.so')
+                        shutil.move('graphviz/libgvplugin_core.so.6.0.0', 'libgvplugin_core.so')
                     else:
                         raise Exception('Unknown platform "%s"' % platform.system())
                     for f in self.libs_plugins:
@@ -153,10 +154,8 @@ class GraphvizConan(ConanFile):
             raise Exception('Unknown platform "%s"' % platform.system())
 
         self.copy('*.h', src='%s/include' % self.build_dir, dst='include')
-        for f in self.libs:
+        for f in self.libs + self.libs_plugins:
             self.copy('lib%s.%s' % (f, libext), src='%s/lib' % self.build_dir, dst='lib')
-        for f in self.libs_plugins:
-            self.copy('lib%s.%s' % (f, libext), src='%s/lib/graphviz' % self.build_dir, dst='lib')
 
     def package_info(self):
         self.cpp_info.libs = self.libs + self.libs_plugins
