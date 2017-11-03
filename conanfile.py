@@ -62,11 +62,11 @@ class GraphvizConan(ConanFile):
             autotools = AutoToolsBuildEnvironment(self)
             autotools.cxx_flags.append('-Oz')
             if platform.system() == 'Darwin':
-                autotools.cxx_flags.append('-mmacosx-version-min=10.8')
-                autotools.cxx_flags.append('-mno-avx')
-                autotools.cxx_flags.append('-mno-sse4')
-                autotools.cxx_flags.append('-mno-sse4.1')
-                autotools.cxx_flags.append('-mno-sse4.2')
+                autotools.flags.append('-mmacosx-version-min=10.8')
+                autotools.flags.append('-mno-avx')
+                autotools.flags.append('-mno-sse4')
+                autotools.flags.append('-mno-sse4.1')
+                autotools.flags.append('-mno-sse4.2')
                 env_vars = {}
             elif platform.system() == 'Linux':
                 env_vars = {
