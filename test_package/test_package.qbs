@@ -1,4 +1,4 @@
-import qbs
+import qbs 1.0
 
 Project {
 	minimumQbsVersion: '1.6'
@@ -10,7 +10,6 @@ Project {
 		Depends { name: 'ConanBasicSetup' }
 
 		Depends { name: 'cpp' }
-		cpp.compilerPathByLanguage: {}
 		cpp.cxxStandardLibrary: 'libstdc++'
 		cpp.rpaths: [ buildDirectory + '/../../bin' ]
 
@@ -20,7 +19,10 @@ Project {
 		}
 		Properties {
 			condition: qbs.targetOS.contains('macos')
-			cpp.compilerPath: '/usr/local/Cellar/llvm/3.2/bin/clang++'
+			cpp.compilerPathByLanguage: ({
+				c: '/usr/local/bin/clang',
+				cpp: '/usr/local/bin/clang++',
+			})
 			cpp.linkerPath: '/usr/local/Cellar/llvm/3.2/bin/clang++'
 			cpp.linkerWrapper: undefined
 			cpp.minimumMacosVersion: '10.8'
@@ -30,7 +32,10 @@ Project {
 		}
 		Properties {
 			condition: qbs.targetOS.contains('linux')
-			cpp.compilerPath: '/opt/llvm-3.8.0/bin/clang++'
+			cpp.compilerPathByLanguage: ({
+				c: '/opt/llvm-3.8.0/bin/clang',
+				cpp: '/opt/llvm-3.8.0/bin/clang++',
+			})
 			cpp.cxxFlags: [ '-fblocks' ]
 			cpp.linkerPath: '/opt/llvm-3.8.0/bin/clang++'
 			cpp.target: 'x86_64-unknown-linux-gnu'
