@@ -5,14 +5,14 @@ class GraphvizTestConan(ConanFile):
     generators = 'qbs'
 
     def build(self):
-        self.run('qbs -f "%s"' % self.conanfile_directory);
+        self.run('qbs -f "%s"' % self.source_folder)
 
     def imports(self):
         self.copy('*.dylib', dst='bin', src='lib')
         self.copy('*.so', dst='bin', src='lib')
 
     def test(self):
-        self.run('qbs run -f "%s"' % self.conanfile_directory)
+        self.run('qbs run')
 
         # Ensure we only link to system libraries and our own libraries.
         if platform.system() == 'Darwin':
