@@ -25,8 +25,8 @@ Project {
 			})
 			cpp.linkerPath: '/usr/local/Cellar/llvm/3.2/bin/clang++'
 			cpp.linkerWrapper: undefined
-			cpp.minimumMacosVersion: '10.8'
-			cpp.target: 'x86_64-apple-macosx10.8'
+			cpp.minimumMacosVersion: '10.10'
+			cpp.target: 'x86_64-apple-macosx10.10'
 			cpp.stripPath: '/usr/bin/true'
 			xcode.sdk: 'macosx10.10'
 		}

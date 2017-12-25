@@ -5,12 +5,16 @@ import shutil
 
 class GraphvizConan(ConanFile):
     name = 'graphviz'
-    version = '2.28.0'
+
+    source_version = '2.28.0'
+    package_version = '2'
+    version = '%s-%s' % (source_version, package_version)
+
     settings = 'os', 'compiler', 'build_type', 'arch'
     url = 'https://github.com/vuo/conan-graphviz'
     license = 'http://graphviz.org/License.php'
     description = 'A way of representing structural information as diagrams of abstract graphs and networks'
-    source_dir = 'graphviz-%s' % version
+    source_dir = 'graphviz-%s' % source_version
     build_dir = '_build'
     libs = ['cdt', 'gvc', 'pathplan', 'graph', 'xdot']
     libs_plugins = ['gvplugin_dot_layout', 'gvplugin_core']
@@ -22,7 +26,7 @@ class GraphvizConan(ConanFile):
             raise Exception('Unknown platform "%s"' % platform.system())
 
     def source(self):
-        tools.get('http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-%s.tar.gz' % self.version,
+        tools.get('http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.28.0.tar.gz/8d26c1171f30ca3b1dc1b429f7937e58/graphviz-2.28.0.tar.gz',
                   sha256='d3aa7973c578cae4cc26d9d6498c57ed06680cab9a4e940d0357a3c6527afc76')
 
         tools.download('https://b33p.net/sites/default/files/graphviz-skip-dot-layout.patch', 'graphviz-skip-dot-layout.patch')
@@ -62,7 +66,7 @@ class GraphvizConan(ConanFile):
             autotools = AutoToolsBuildEnvironment(self)
             autotools.cxx_flags.append('-Oz')
             if platform.system() == 'Darwin':
-                autotools.flags.append('-mmacosx-version-min=10.8')
+                autotools.flags.append('-mmacosx-version-min=10.10')
                 autotools.flags.append('-mno-avx')
                 autotools.flags.append('-mno-sse4')
                 autotools.flags.append('-mno-sse4.1')
