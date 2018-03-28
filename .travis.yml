@@ -29,13 +29,7 @@ before_install:
              pip install conan
           && conan config install https://vuo.org/sites/default/files/conan-linux.zip
           && . /opt/qt59/bin/qt59-env.sh
-          && set -x
-          ; dpkg -l | grep graphviz
-          ; dpkg -l graphviz
-          ; dpkg -S graphviz
-          ; apt-cache search graphviz
-          ; ls -l /usr/lib
-          ; apt-get remove graphviz
+          && sudo apt-get remove libgraphviz-dev
       ; fi
 
 install:
