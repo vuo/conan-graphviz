@@ -4,12 +4,6 @@ import platform
 class GraphvizTestConan(ConanFile):
     generators = 'qbs'
 
-    def requirements(self):
-        if platform.system() == 'Darwin':
-            self.requires('ld64/242-2@vuo/stable')
-        elif platform.system() != 'Linux':
-            raise Exception('Unknown platform "%s"' % platform.system())
-
     def build(self):
         self.run('qbs -f "%s"' % self.source_folder)
 
