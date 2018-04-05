@@ -13,15 +13,13 @@ matrix:
           addons:
               apt:
                   sources:
-                      - llvm-toolchain-trusty-5.0
                       - sourceline: 'ppa:beineri/opt-qt594-trusty'
                   packages:
-                      - clang-5.0
                       - qt59qbs
 
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-             brew update
+             brew update &> /dev/null
           && travis_wait brew install --force-bottle conan qbs
           && conan config install https://vuo.org/sites/default/files/conan-macos.zip
       ; fi
