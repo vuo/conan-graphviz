@@ -7,7 +7,7 @@ class GraphvizConan(ConanFile):
     name = 'graphviz'
 
     source_version = '2.28.0'
-    package_version = '3'
+    package_version = '4'
     version = '%s-%s' % (source_version, package_version)
 
     build_requires = 'llvm/3.3-5@vuo/stable', \
