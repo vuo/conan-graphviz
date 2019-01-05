@@ -41,7 +41,12 @@ class GraphvizConan(ConanFile):
         tools.get('http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.28.0.tar.gz/8d26c1171f30ca3b1dc1b429f7937e58/graphviz-2.28.0.tar.gz',
                   sha256='d3aa7973c578cae4cc26d9d6498c57ed06680cab9a4e940d0357a3c6527afc76')
 
+        # https://b33p.net/kosada/node/11703
         tools.patch(patch_file='graphviz-skip-dot-layout.patch', base_path=self.source_dir)
+
+        # https://b33p.net/kosada/node/15651
+        # https://gitlab.com/graphviz/graphviz/commit/b7557212438dad13a857f72ec581cc67049ad4cb
+        tools.patch(patch_file='b7557212438dad13a857f72ec581cc67049ad4cb.patch', base_path=self.source_dir)
 
         self.run('cp %s/COPYING %s/%s.txt' % (self.source_dir, self.source_dir, self.name))
 

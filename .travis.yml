@@ -19,10 +19,29 @@ matrix:
                       - libc++abi-dev
                       - qt59qbs
 
+cache:
+    directories:
+        - /usr/local/Cellar/conan
+        - /usr/local/Cellar/gdbm
+        - /usr/local/Cellar/libffi
+        - /usr/local/Cellar/openssl
+        - /usr/local/Cellar/pkg-config
+        - /usr/local/Cellar/python
+        - /usr/local/Cellar/readline
+        - /usr/local/Cellar/sqlite
+        - /usr/local/Cellar/xz
+        - /usr/local/opt/python
+
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
              brew update &> /dev/null
-          && travis_wait brew install --force-bottle conan qbs
+          && ( brew link libffi     || travis_wait brew install --force-bottle libffi     )
+          && ( brew link xz         || travis_wait brew install --force-bottle xz         )
+          && brew upgrade --force-bottle python
+          && brew postinstall python
+          && ls -l /usr/local/bin /usr/local/opt/python/libexec/bin /usr/local/Cellar/python /usr/local/Cellar/python/3.7.2/bin
+          && /usr/local/Cellar/python/3.7.2/bin/pip3 install setuptools
+          && ( brew link conan      || travis_wait brew install --force-bottle conan      )
           && conan config install https://vuo.org/sites/default/files/conan-macos.zip
       ; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -30,17 +49,15 @@ before_install:
           && conan config install https://vuo.org/sites/default/files/conan-linux.zip
           && . /opt/qt59/bin/qt59-env.sh
           && sudo apt-get remove libgraphviz-dev
+          && qbs --version
+          && qbs setup-qt --detect
+          && qbs setup-toolchains --detect
+          && qbs config defaultProfile clang
       ; fi
 
 install:
-    - qbs --version
-    - qbs setup-qt --detect
-    - qbs setup-toolchains --detect
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-             qbs config defaultProfile clang
-      ; fi
     - conan user
 
 script:
-    - conan create . vuo/stable
+    - conan create  -tf None . vuo/stable
       && conan upload --remote vuo --all --confirm graphviz/*
