@@ -7,7 +7,7 @@ class GraphvizConan(ConanFile):
     name = 'graphviz'
 
     source_version = '2.28.0'
-    package_version = '4'
+    package_version = '5'
     version = '%s-%s' % (source_version, package_version)
 
     build_requires = 'llvm/3.3-5@vuo/stable', \
@@ -29,6 +29,7 @@ class GraphvizConan(ConanFile):
         'gvplugin_dot_layout': 1,
         'gvplugin_core': 1,
     }
+    exports_sources = '*.patch'
 
     def requirements(self):
         if platform.system() == 'Linux':
@@ -40,8 +41,6 @@ class GraphvizConan(ConanFile):
         tools.get('http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.28.0.tar.gz/8d26c1171f30ca3b1dc1b429f7937e58/graphviz-2.28.0.tar.gz',
                   sha256='d3aa7973c578cae4cc26d9d6498c57ed06680cab9a4e940d0357a3c6527afc76')
 
-        tools.download('https://b33p.net/sites/default/files/graphviz-skip-dot-layout.patch', 'graphviz-skip-dot-layout.patch')
-        tools.check_sha256('graphviz-skip-dot-layout.patch', 'c6a7022521c5559ba56f92845c2f1b4b87f541b87cd25949a6854e86d4215a76')
         tools.patch(patch_file='graphviz-skip-dot-layout.patch', base_path=self.source_dir)
 
         self.run('cp %s/COPYING %s/%s.txt' % (self.source_dir, self.source_dir, self.name))
