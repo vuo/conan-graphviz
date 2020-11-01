@@ -1,18 +1,13 @@
 --- lib/dotgen/dotinit.c.old	2016-05-09 15:32:48.000000000 -0400
 +++ lib/dotgen/dotinit.c	2016-05-09 15:33:17.000000000 -0400
-@@ -258,7 +258,7 @@
-     asp = setAspect (g, &aspect);
+@@ -506,8 +506,8 @@
  
-     dot_init_node_edge(g);
--
-+/*
-     do {
-         dot_rank(g, asp);
- 	if (aspect.badGraph) {
-@@ -276,5 +276,5 @@
-     if (mapbool(agget(g, "compound")))
- 	dot_compoundEdges(g);
-     dotneato_postprocess(g);
--
-+*/
+ void dot_layout(Agraph_t * g)
+ {
+-    if (agnnodes(g)) doDot (g);
+-    dotneato_postprocess(g);
++    // if (agnnodes(g)) doDot (g);
++    // dotneato_postprocess(g);
  }
+ 
+ Agraph_t * dot_root (void* p)

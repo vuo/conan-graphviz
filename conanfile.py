@@ -1,4 +1,4 @@
-from conans import ConanFile, tools, AutoToolsBuildEnvironment
+from conans import ConanFile, CMake, tools
 import os
 import platform
 import shutil
@@ -6,28 +6,32 @@ import shutil
 class GraphvizConan(ConanFile):
     name = 'graphviz'
 
-    source_version = '2.28.0'
-    package_version = '5'
+    source_version = '2.44.1'
+    package_version = '0'
     version = '%s-%s' % (source_version, package_version)
 
-    build_requires = 'llvm/3.3-5@vuo/stable', \
-        'vuoutils/1.0@vuo/stable'
+    build_requires = (
+        'llvm/5.0.2-1@vuo/stable',
+        'macos-sdk/11.0-0@vuo/stable',
+        'vuoutils/1.2@vuo/stable',
+    )
     settings = 'os', 'compiler', 'build_type', 'arch'
     url = 'https://github.com/vuo/conan-graphviz'
     license = 'http://graphviz.org/License.php'
     description = 'A way of representing structural information as diagrams of abstract graphs and networks'
     source_dir = 'graphviz-%s' % source_version
     build_dir = '_build'
+    install_dir = '_install'
     libs = {
         'cdt': 5,
+        'cgraph': 6,
         'gvc': 6,
         'pathplan': 4,
-        'graph': 5,
         'xdot': 4,
     }
     libs_plugins = {
-        'gvplugin_dot_layout': 1,
-        'gvplugin_core': 1,
+        'gvplugin_dot_layout': 6,
+        'gvplugin_core': 6,
     }
     exports_sources = '*.patch'
 
@@ -38,108 +42,72 @@ class GraphvizConan(ConanFile):
             raise Exception('Unknown platform "%s"' % platform.system())
 
     def source(self):
-        tools.get('http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.28.0.tar.gz/8d26c1171f30ca3b1dc1b429f7937e58/graphviz-2.28.0.tar.gz',
-                  sha256='d3aa7973c578cae4cc26d9d6498c57ed06680cab9a4e940d0357a3c6527afc76')
+        tools.get('https://gitlab.com/graphviz/graphviz/-/archive/%s/graphviz-%s.tar.bz2' % (self.source_version, self.source_version),
+                  sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
 
-        # https://b33p.net/kosada/node/11703
+        # https://b33p.net/kosada/vuo/vuo/-/issues/11703#note_2056328
         tools.patch(patch_file='graphviz-skip-dot-layout.patch', base_path=self.source_dir)
-
-        # https://b33p.net/kosada/node/15651
-        # https://gitlab.com/graphviz/graphviz/commit/b7557212438dad13a857f72ec581cc67049ad4cb
-        tools.patch(patch_file='b7557212438dad13a857f72ec581cc67049ad4cb.patch', base_path=self.source_dir)
 
         self.run('cp %s/COPYING %s/%s.txt' % (self.source_dir, self.source_dir, self.name))
 
     def build(self):
         import VuoUtils
+
+        cmake = CMake(self)
+
+        cmake.definitions['CMAKE_BUILD_TYPE'] = 'Release'
+        cmake.definitions['CMAKE_C_COMPILER']   = '%s/bin/clang'   % self.deps_cpp_info['llvm'].rootpath
+        cmake.definitions['CMAKE_C_FLAGS'] = '-Oz -fno-common'
+        cmake.definitions['CMAKE_INSTALL_NAME_DIR'] = '@rpath'
+        cmake.definitions['CMAKE_INSTALL_PREFIX'] = '%s/%s' % (os.getcwd(), self.install_dir)
+        cmake.definitions['CMAKE_OSX_ARCHITECTURES'] = 'x86_64;arm64'
+        cmake.definitions['CMAKE_OSX_DEPLOYMENT_TARGET'] = '10.11'
+        cmake.definitions['CMAKE_OSX_SYSROOT'] = self.deps_cpp_info['macos-sdk'].rootpath
+        cmake.definitions['BUILD_SHARED_LIBS'] = 'ON'
+        cmake.definitions['BUILD_STATIC_LIBS'] = 'OFF'
+        cmake.definitions['CAIRO_INCLUDE_DIR'] = ''
+        cmake.definitions['CAIRO_LIBRARY'] = ''
+        cmake.definitions['CAIRO_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['EXPAT_INCLUDE_DIR'] = ''
+        cmake.definitions['EXPAT_LIBRARY'] = ''
+        cmake.definitions['EXPAT_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['GD_INCLUDE_DIR'] = ''
+        cmake.definitions['GD_LIBRARY'] = ''
+        cmake.definitions['GD_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['GLIB_INCLUDE_DIR'] = ''
+        cmake.definitions['GLIB_LIBRARY'] = ''
+        cmake.definitions['GLIB_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['GOBJECT_LIBRARY'] = ''
+        cmake.definitions['GOBJECT_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['LTDL_INCLUDE_DIR'] = ''
+        cmake.definitions['LTDL_LIBRARY'] = ''
+        cmake.definitions['PANGOCAIRO_INCLUDE_DIR'] = ''
+        cmake.definitions['PANGOCAIRO_LIBRARY'] = ''
+        cmake.definitions['PANGOCAIRO_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['PANGO_LIBRARY'] = ''
+        cmake.definitions['PANGO_RUNTIME_LIBRARY'] = ''
+        cmake.definitions['enable_ltdl'] = 'OFF'
+        cmake.definitions['with_digcola'] = 'OFF'
+        cmake.definitions['with_ipsepcola'] = 'OFF'
+        cmake.definitions['with_ortho'] = 'OFF'
+        cmake.definitions['with_sfdp'] = 'OFF'
+        cmake.definitions['with_smyrna'] = 'OFF'
+
         tools.mkdir(self.build_dir)
         with tools.chdir(self.build_dir):
-            autotools = AutoToolsBuildEnvironment(self)
+            cmake.configure(source_dir='../%s' % self.source_dir,
+                            build_dir='.')
+            cmake.build()
+            cmake.install()
 
-            # The LLVM/Clang libs get automatically added by the `requires` line,
-            # but this package doesn't need to link with them.
-            autotools.libs = ['c++abi']
-
-            autotools.flags.append('-Oz')
-            if platform.system() == 'Darwin':
-                autotools.flags.append('-mmacosx-version-min=10.10')
-                autotools.flags.append('-mno-avx')
-                autotools.flags.append('-mno-sse4')
-                autotools.flags.append('-mno-sse4.1')
-                autotools.flags.append('-mno-sse4.2')
-
-            autotools.link_flags.append('-Wl,-headerpad_max_install_names')
-
-            env_vars = {
-                'CC' : self.deps_cpp_info['llvm'].rootpath + '/bin/clang',
-                'CXX': self.deps_cpp_info['llvm'].rootpath + '/bin/clang++',
-            }
-            with tools.environment_append(env_vars):
-                autotools.configure(configure_dir='../%s' % self.source_dir,
-                                    build=False,
-                                    host=False,
-                                    args=['--quiet',
-                                          '--disable-debug',
-                                          '--disable-dependency-tracking',
-                                          '--disable-guile',
-                                          '--disable-java',
-                                          '--disable-ltdl',
-                                          '--disable-lua',
-                                          '--disable-ocaml',
-                                          '--disable-perl',
-                                          '--disable-php',
-                                          '--disable-python',
-                                          '--disable-r',
-                                          '--disable-ruby',
-                                          '--disable-sharp',
-                                          '--disable-static',
-                                          '--disable-swig',
-                                          '--disable-swig',
-                                          '--disable-tcl',
-                                          '--enable-shared',
-                                          '--with-qt=no',
-                                          '--with-quartz',
-                                          '--without-digcola',
-                                          '--without-expat',
-                                          '--without-fontconfig',
-                                          '--without-freetype2',
-                                          '--without-gdk-pixbuf',
-                                          '--without-jpeg',
-                                          '--without-ortho',
-                                          '--without-pangocairo',
-                                          '--without-png',
-                                          '--without-quartz',
-                                          '--without-sfdp',
-                                          '--without-x',
-                                          '--prefix=%s' % os.getcwd()])
-                autotools.make(args=['--quiet'])
-
-                with tools.chdir('lib'):
-                    autotools.make(args=['--quiet', 'install'])
-                    if platform.system() == 'Darwin':
-                        shutil.move('libcdt.5.dylib', 'libcdt.dylib')
-                        shutil.move('libgvc.6.dylib', 'libgvc.dylib')
-                        shutil.move('libpathplan.4.dylib', 'libpathplan.dylib')
-                        shutil.move('libgraph.5.dylib', 'libgraph.dylib')
-                        shutil.move('libxdot.4.dylib', 'libxdot.dylib')
-                    VuoUtils.fixLibs(self.libs, self.deps_cpp_info)
-
-                with tools.chdir('plugin'):
-                    autotools.make(args=['--quiet', 'install'])
-
-                with tools.chdir('lib'):
-                    if platform.system() == 'Darwin':
-                        shutil.move('graphviz/libgvplugin_dot_layout.6.dylib', 'libgvplugin_dot_layout.dylib')
-                        shutil.move('graphviz/libgvplugin_core.6.dylib', 'libgvplugin_core.dylib')
-                    elif platform.system() == 'Linux':
-                        shutil.move('graphviz/libgvplugin_dot_layout.so.6.0.0', 'libgvplugin_dot_layout.so')
-                        shutil.move('graphviz/libgvplugin_core.so.6.0.0', 'libgvplugin_core.so')
-                    else:
-                        raise Exception('Unknown platform "%s"' % platform.system())
-
-                    l = self.libs_plugins.copy()
-                    l.update(self.libs)
-                    VuoUtils.fixLibs(l, self.deps_cpp_info)
+        with tools.chdir(self.install_dir):
+            with tools.chdir('lib'):
+                with tools.chdir('graphviz'):
+                    for f in self.libs_plugins.keys():
+                        shutil.copy('lib%s.dylib' % f, '..')
+                l = self.libs_plugins.copy()
+                l.update(self.libs)
+                VuoUtils.fixLibs(l, self.deps_cpp_info)
 
     def package(self):
         if platform.system() == 'Darwin':
@@ -149,9 +117,9 @@ class GraphvizConan(ConanFile):
         else:
             raise Exception('Unknown platform "%s"' % platform.system())
 
-        self.copy('*.h', src='%s/include' % self.build_dir, dst='include')
+        self.copy('*.h', src='%s/include' % self.install_dir, dst='include')
         for f in list(self.libs.keys()) + list(self.libs_plugins.keys()):
-            self.copy('lib%s.%s' % (f, libext), src='%s/lib' % self.build_dir, dst='lib')
+            self.copy('lib%s.%s' % (f, libext), src='%s/lib' % self.install_dir, dst='lib')
 
         self.copy('%s.txt' % self.name, src=self.source_dir, dst='license')
 
