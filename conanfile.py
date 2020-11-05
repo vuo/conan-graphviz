@@ -7,7 +7,7 @@ class GraphvizConan(ConanFile):
     name = 'graphviz'
 
     source_version = '2.44.1'
-    package_version = '0'
+    package_version = '1'
     version = '%s-%s' % (source_version, package_version)
 
     build_requires = (
@@ -44,9 +44,6 @@ class GraphvizConan(ConanFile):
     def source(self):
         tools.get('https://gitlab.com/graphviz/graphviz/-/archive/%s/graphviz-%s.tar.bz2' % (self.source_version, self.source_version),
                   sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
-
-        # https://b33p.net/kosada/vuo/vuo/-/issues/11703#note_2056328
-        tools.patch(patch_file='graphviz-skip-dot-layout.patch', base_path=self.source_dir)
 
         self.run('cp %s/COPYING %s/%s.txt' % (self.source_dir, self.source_dir, self.name))
 
